@@ -189,10 +189,20 @@ export interface UploadedFile {
   billData?: BillDataInfo;
 }
 
+// Riga della tabella consumi mensili (input manuale F1/F2/F3)
+export interface MonthlyConsumptionRow {
+  month: number;  // 0-11
+  year: number;
+  f1: number;     // kWh fascia F1
+  f2: number;     // kWh fascia F2
+  f3: number;     // kWh fascia F3
+}
+
 // Dati inseriti manualmente
 export interface ManualInputData {
   annualConsumption_kWh: number | null;  // Consumo annuo in kWh
   averagePrice_euroKWh: number | null;    // Prezzo medio €/kWh
+  monthlyData?: MonthlyConsumptionRow[];  // Tabella consumi mensili
 }
 
 // Stato dell'applicazione
@@ -227,6 +237,8 @@ export interface EnergyState {
   removeFile: (fileId: string) => void;
   setManualInput: (data: Partial<ManualInputData>) => void;
   applyManualInput: () => void;
+  setMonthlyData: (data: MonthlyConsumptionRow[]) => void;
+  applyMonthlyInput: () => void;
   setConfig: (config: Partial<SystemConfig>) => void;
   setFinancial: (params: Partial<FinancialParams>) => void;
   setCurrentStep: (step: WizardStep) => void;

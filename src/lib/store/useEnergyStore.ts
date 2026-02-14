@@ -11,6 +11,7 @@ import {
   UploadedFile,
   BillDataInfo,
   ManualInputData,
+  MonthlyConsumptionRow,
   HOURS_PER_YEAR,
 } from "@/lib/types/energy";
 import {
@@ -440,6 +441,68 @@ export const useEnergyStore = create<EnergyState>((set, get) => ({
       uploadedFiles: [manualFile],
       results: null,
       ...(averagePrice_euroKWh ? { financial: { ...state.financial, ...newFinancial } } : {}),
+    });
+
+    get().calculate();
+  },
+
+  /**
+   * Aggiorna i dati mensili nella tabella F1/F2/F3
+   */
+  setMonthlyData: (data: MonthlyConsumptionRow[]) => {
+    set((state) => ({
+      manualInput: { ...state.manualInput, monthlyData: data },
+    }));
+  },
+
+  /**
+   * Applica i dati mensili F1/F2/F3 generando un profilo orario annuale
+   */
+  applyMonthlyInput: () => {
+    const state = get();
+    const { monthlyData, averagePrice_euroKWh } = state.manualInput;
+
+    if (!monthlyData || monthlyData.length === 0) return;
+
+    // Somma annuale F1/F2/F3
+    const totalF1 = monthlyData.reduce((sum, r) => sum + (r.f1 || 0), 0);
+    const totalF2 = monthlyData.reduce((sum, r) => sum + (r.f2 || 0), 0);
+    const totalF3 = monthlyData.reduce((sum, r) => sum + (r.f3 || 0), 0);
+    const totalConsumption = totalF1 + totalF2 + totalF3;
+
+    if (totalConsumption <= 0) return;
+
+    // Genera profilo orario riutilizzando la funzione esistente
+    const profile = generateProfileFromBillDataInfo({
+      f1: totalF1,
+      f2: totalF2,
+      f3: totalF3,
+      totalConsumption,
+      billingMonths: monthlyData.length,
+    });
+
+    const metrics = calculateLoadMetrics(profile);
+
+    const manualFile: UploadedFile = {
+      id: "monthly-input",
+      name: "Tabella Consumi Mensili",
+      type: "csv",
+      size: 0,
+      dataPoints: HOURS_PER_YEAR,
+      pMax: metrics.pMax,
+      totalConsumption,
+      status: "success",
+    };
+
+    set({
+      loadProfile: profile,
+      loadMetrics: metrics,
+      hasData: true,
+      uploadedFiles: [manualFile],
+      results: null,
+      ...(averagePrice_euroKWh
+        ? { financial: { ...state.financial, purchasePrice: averagePrice_euroKWh } }
+        : {}),
     });
 
     get().calculate();

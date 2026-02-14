@@ -34,6 +34,7 @@ import { useEnergyStore } from "@/lib/store/useEnergyStore";
 import { formatEnergy, formatPower, formatNumber } from "@/lib/utils/formatters";
 import { LoadProfileChart } from "@/components/charts/LoadProfileChart";
 import { BillConfirmModal } from "@/components/steps/BillConfirmModal";
+import { MonthlyInputTable } from "@/components/steps/MonthlyInputTable";
 import { usePDFExtraction } from "@/hooks/usePDFExtraction";
 import { UploadedFile } from "@/lib/types/energy";
 
@@ -254,6 +255,9 @@ export function DataStep() {
                 </Button>
               </div>
             </div>
+
+            {/* Tabella consumi mensili F1/F2/F3 */}
+            <MonthlyInputTable />
           </CardContent>
         </Card>
 
